@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "508108420327",
+    "project_id": "piyo-547cd",
+    "storage_bucket": "piyo-547cd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508108420327:android:8f1c5e0b9ed62f27749e42",
+        "android_client_info": {
+          "package_name": "com.example.piyo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIBGSNW5s-MM19rZ78auF1-5SZO6ATm_Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
