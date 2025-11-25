@@ -1,0 +1,103 @@
+package com.example.piyo.presentation.home.beranda
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.piyo.R
+import com.example.piyo.ui.theme.BlueMain
+import com.example.piyo.ui.theme.Sora
+import com.example.piyo.ui.theme.YellowMain
+import androidx.compose.ui.graphics.Color
+
+@Composable
+fun QuizBanner(
+    modifier: Modifier = Modifier,
+    title: String = "Uji Pengetahuan tentang\nParenting Anda!\nMulai Kuis Sekarang",
+    ctaText: String = "Mulai Kuis",
+    illustrationRes: Int = R.drawable.ic_quiz_illustration,
+    onCtaClick: () -> Unit = {}
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = BlueMain),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .weight(0.62f)
+                    .padding(start = 24.dp, top = 24.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = Sora,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    color = Color.White
+                )
+
+                Button(
+                    onClick = onCtaClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = YellowMain),
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                    modifier = Modifier.wrapContentWidth()
+                ) {
+                    Text(
+                        text = ctaText,
+                        fontFamily = Sora,
+                        fontSize = 14.sp,
+                        color = Color.Black
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(0.38f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp))
+            ) {
+                Image(
+                    painter = painterResource(id = illustrationRes),
+                    contentDescription = "Ilustrasi Kuis",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // subtle gradient to blend illustration with banner color
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                listOf(Color(0x40000000), Color.Transparent)
+                            ),
+                            shape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+                        )
+                )
+            }
+        }
+    }
+}

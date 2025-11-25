@@ -36,3 +36,15 @@ data object SettingsRoute : AppRoute
 
 @Serializable
 data object ChatbotRoute : AppRoute
+
+@Serializable
+data object QuizRoute : AppRoute
+
+@Serializable
+data object KeamananIzinRoute : AppRoute
+
+@Serializable
+data object NotifikasiRoute : AppRoute
+
+@Serializable
+data object InsightRoute : AppRoute

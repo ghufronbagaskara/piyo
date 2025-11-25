@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.example.piyo.presentation.home.beranda.BerandaScreen
 import com.example.piyo.presentation.home.parent.ChatBotScreen
+import com.example.piyo.presentation.home.settings.KeamananIzinScreen
 import com.example.piyo.presentation.home.settings.SettingScreen
 import com.example.piyo.ui.theme.Black
 
@@ -31,7 +33,7 @@ fun MainNavigation(
                 onItemClick = {
                     selectedItem = it
                     when (it) {
-                        0 -> navigateToTab(navController, ChatbotRoute)
+                        0 -> navigateToTab(navController, HomeRoute)
                         1 -> navigateToTab(navController, PiyoParentRoute)
                         2 -> navigateToTab(navController, PiyoPlanRoute)
                         3 -> navigateToTab(navController, SettingsRoute)
@@ -42,23 +44,46 @@ fun MainNavigation(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = ChatbotRoute,
+            startDestination = HomeRoute,
             modifier = modifier.padding(innerPadding)
         ) {
+            composable<HomeRoute> {
+                BerandaScreen(navController = navController)
+            }
+
             composable<ChatbotRoute> {
                 ChatBotScreen(navController = navController)
             }
+
             composable<PiyoParentRoute> {
                 PlaceholderScreen("Piyo Parent")
             }
+
             composable<PiyoPlanRoute> {
                 PlaceholderScreen("Piyo Plan")
             }
+
+            composable<QuizRoute> {
+                // placeholder until quiz screen is implemented by another dev
+                PlaceholderScreen("Kuis")
+            }
+
             composable<SettingsRoute> {
                 SettingScreen(
                     navController = navController,
                     onLogout = navigateLogin
                 )
+            }
+
+            composable<KeamananIzinRoute> {
+                KeamananIzinScreen(navController = navController)
+            }
+
+            composable<NotifikasiRoute> {
+                com.example.piyo.presentation.home.notifications.NotifikasiScreen(navController = navController)
+            }
+            composable<InsightRoute> {
+                com.example.piyo.presentation.home.insight.InsightScreen(navController = navController)
             }
         }
     }

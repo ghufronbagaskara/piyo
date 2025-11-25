@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,6 +37,7 @@ import com.example.piyo.ui.theme.BlueMain
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.*
+import kotlinx.serialization.SerializationException
 
 data class ChatMessage(
     val id: String,
@@ -97,7 +99,16 @@ fun ChatBotScreen(navController: NavController) {
                     }
                 )
 
-                val testResponse = testModel.generateContent("test")
+                val testResponse = try {
+                    testModel.generateContent("test")
+                } catch (se: SerializationException) {
+                    // The library sometimes returns an error JSON that doesn't match the expected
+                    // schema (MissingField). If the error indicates the API key is rejected, stop trying.
+                    Log.e("ChatBot", "Serialization error while probing model $modelName: ${se.message}")
+                    modelStatus = "❌ API response error (check API key)"
+                    break
+                }
+
                 if (testResponse.text != null) {
                     generativeModel = testModel
                     modelStatus = "✅ Online"
@@ -105,7 +116,14 @@ fun ChatBotScreen(navController: NavController) {
                     break
                 }
             } catch (e: Exception) {
-                Log.e("ChatBot", "Model $modelName failed: ${e.message}")
+                // If the API explicitly denies permission (e.g., leaked key), surface a clear status
+                val msg = e.message ?: "${e::class.simpleName}"
+                Log.e("ChatBot", "Model $modelName failed: $msg")
+                if (msg.contains("PERMISSION_DENIED") || msg.contains("leaked", true) || msg.contains("permission_denied", true)) {
+                    modelStatus = "❌ API key rejected (permission denied). Replace the key."
+                    break
+                }
+                // otherwise continue to next candidate
             }
         }
 
@@ -163,11 +181,22 @@ fun ChatBotScreen(navController: NavController) {
                     Pertanyaan pengguna: "$text"
                 """.trimIndent()
 
-                val response = withContext(Dispatchers.IO) {
-                    model.generateContent(prompt)
-                }
+                val reply = try {
+                    val response = withContext(Dispatchers.IO) {
+                        try {
+                            model.generateContent(prompt)
+                        } catch (se: SerializationException) {
+                            // Handle unexpected error format from server
+                            Log.e("ChatBot", "SerializationException during generateContent: ${se.message}")
+                            throw Exception("API response format error")
+                        }
+                    }
 
-                val reply = response.text?.trim() ?: throw Exception("Empty response")
+                    response.text?.trim() ?: throw Exception("Empty response")
+                } catch (e: Exception) {
+                    // Bubble up as an exception to be handled by the outer try/catch below
+                    throw e
+                }
 
                 val loadingIndex = messages.indexOfFirst { it.id == loadingId }
                 if (loadingIndex != -1) messages.removeAt(loadingIndex)
@@ -248,6 +277,17 @@ fun ChatBotScreen(navController: NavController) {
                                 modelStatus.contains("Menghubungkan", true) -> Color(0xFFF59E0B)
                                 else -> Color(0xFFEF4444)
                             }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Notifications button (navigates to NotifikasiRoute)
+                    IconButton(onClick = { navController.navigate(com.example.piyo.presentation.navigation.NotifikasiRoute) }) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = "Notifikasi",
+                            tint = Color(0xFF1F1F1F)
                         )
                     }
                 }
