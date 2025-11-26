@@ -283,13 +283,16 @@ fun ChatBotScreen(navController: NavController) {
                     Spacer(modifier = Modifier.weight(1f))
 
                     // Notifications button (navigates to NotifikasiRoute)
-                    IconButton(onClick = { navController.navigate(com.example.piyo.presentation.navigation.NotifikasiRoute) }) {
+                    IconButton(onClick = {
+                        navController.navigate(com.example.piyo.presentation.navigation.NotifikasiRoute)
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Notifications,
                             contentDescription = "Notifikasi",
                             tint = Color(0xFF1F1F1F)
                         )
                     }
+
                 }
             }
 

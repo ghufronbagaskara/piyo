@@ -13,6 +13,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.example.piyo.presentation.home.beranda.BerandaScreen
 import com.example.piyo.presentation.home.parent.ChatBotScreen
+import com.example.piyo.presentation.home.notifications.NotifikasiScreen
+import com.example.piyo.presentation.home.insight.InsightScreen
 import com.example.piyo.presentation.home.settings.KeamananIzinScreen
 import com.example.piyo.presentation.home.settings.SettingScreen
 import com.example.piyo.ui.theme.Black
@@ -42,13 +44,23 @@ fun MainNavigation(
             )
         }
     ) { innerPadding ->
+
         NavHost(
             navController = navController,
             startDestination = HomeRoute,
-            modifier = modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding)
         ) {
+
             composable<HomeRoute> {
                 BerandaScreen(navController = navController)
+            }
+
+            composable<NotifikasiRoute> {
+                NotifikasiScreen(navController = navController)
+            }
+
+            composable<InsightRoute> {
+                InsightScreen(navController = navController)
             }
 
             composable<ChatbotRoute> {
@@ -63,27 +75,11 @@ fun MainNavigation(
                 PlaceholderScreen("Piyo Plan")
             }
 
-            composable<QuizRoute> {
-                // placeholder until quiz screen is implemented by another dev
-                PlaceholderScreen("Kuis")
-            }
-
             composable<SettingsRoute> {
                 SettingScreen(
                     navController = navController,
                     onLogout = navigateLogin
                 )
-            }
-
-            composable<KeamananIzinRoute> {
-                KeamananIzinScreen(navController = navController)
-            }
-
-            composable<NotifikasiRoute> {
-                com.example.piyo.presentation.home.notifications.NotifikasiScreen(navController = navController)
-            }
-            composable<InsightRoute> {
-                com.example.piyo.presentation.home.insight.InsightScreen(navController = navController)
             }
         }
     }
