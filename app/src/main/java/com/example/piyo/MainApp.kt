@@ -1,7 +1,35 @@
 package com.example.piyo
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.example.piyo.di.appModule
+import com.example.piyo.di.childModule
+import com.example.piyo.di.piyoParentModule
+import com.example.piyo.di.quizModule
+import com.example.piyo.di.userModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
-@HiltAndroidApp
-class MainApp : Application()
+class MainApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        startKoin {
+            // Log Koin untuk debugging (optional, set Level.NONE di production)
+            androidLogger(Level.ERROR)
+
+            // Android context
+            androidContext(this@MainApp)
+
+            // Load modules
+            modules(
+                appModule,
+                piyoParentModule,
+                childModule,
+                userModule,
+                quizModule
+            )
+        }
+    }
+}
