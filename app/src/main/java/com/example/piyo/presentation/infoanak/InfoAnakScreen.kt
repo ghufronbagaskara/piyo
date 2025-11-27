@@ -1,5 +1,9 @@
 package com.example.piyo.presentation.infoanak
 
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +18,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +25,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,23 +34,73 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.piyo.R
-import com.example.piyo.presentation.navigation.MainRoute
 import com.example.piyo.ui.theme.BlueMain
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.imePadding
+import org.koin.androidx.compose.koinViewModel
+import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InfoAnakScreen(navController: NavController) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var birth by rememberSaveable { mutableStateOf("") }
-    var gender by rememberSaveable { mutableStateOf<String?>(null) }
-    var weight by rememberSaveable { mutableStateOf("") }
-    var diagnosis by rememberSaveable { mutableStateOf("") }
+fun InfoAnakScreen(
+    navController: NavController,
+    childId: String? = null,
+    viewModel: ChildInfoViewModel = koinViewModel()
+) {
+    val state = viewModel.state
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Image picker launchers
+    val profilePhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onProfilePhotoSelected(it)
+            // Upload immediately if we have a childId
+            val tempId = childId ?: "temp_${System.currentTimeMillis()}"
+            val photoData = uriToByteArray(context, it)
+            if (photoData != null) {
+                viewModel.uploadProfilePhoto(photoData, tempId)
+            }
+        }
+    }
+
+    val babyPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onBabyPhotoSelected(it)
+            // Upload immediately if we have a childId
+            val tempId = childId ?: "temp_${System.currentTimeMillis()}"
+            val photoData = uriToByteArray(context, it)
+            if (photoData != null) {
+                viewModel.uploadBabyPhoto(photoData, tempId)
+            }
+        }
+    }
+
+    // Load child data if editing
+    LaunchedEffect(childId) {
+        viewModel.loadChild(childId)
+    }
+
+    // Handle success
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            snackbarHostState.showSnackbar("Informasi anak berhasil disimpan")
+            viewModel.resetSuccess()
+            navController.popBackStack()
+        }
+    }
+
+    // Handle error
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -58,6 +113,7 @@ fun InfoAnakScreen(navController: NavController) {
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.White,
         contentWindowInsets = WindowInsets.safeDrawing,
         bottomBar = {
@@ -69,14 +125,22 @@ fun InfoAnakScreen(navController: NavController) {
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
                 Button(
-                    onClick = { navController.navigate(MainRoute) },
+                    onClick = { viewModel.saveChild() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(36.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BlueMain)
+                    colors = ButtonDefaults.buttonColors(containerColor = BlueMain),
+                    enabled = !state.isSaving
                 ) {
-                    Text("Lanjut", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    if (state.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White
+                        )
+                    } else {
+                        Text("Simpan", color = Color.White, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
@@ -106,15 +170,38 @@ fun InfoAnakScreen(navController: NavController) {
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .padding(4.dp)
+                                .clickable { profilePhotoLauncher.launch("image/*") }
                         ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.ic_child_placeholder),
-                                contentDescription = "Foto Si Kecil",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape)
-                                    .background(Color.White)
-                            )
+                            if (state.profilePhotoUri != null || state.profilePhotoUrl.isNotBlank()) {
+                                AsyncImage(
+                                    model = state.profilePhotoUri ?: state.profilePhotoUrl,
+                                    contentDescription = "Foto Profil",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_child_placeholder),
+                                    contentDescription = "Foto Si Kecil",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(Color.White)
+                                )
+                            }
+
+                            if (state.isUploadingProfile) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.5f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Color.White)
+                                }
+                            }
                         }
                     }
                     Box(
@@ -122,7 +209,8 @@ fun InfoAnakScreen(navController: NavController) {
                             .size(32.dp)
                             .clip(CircleShape)
                             .background(Color.White)
-                            .borderStroke(2.dp, BlueMain, CircleShape),
+                            .borderStroke(2.dp, BlueMain, CircleShape)
+                            .clickable { profilePhotoLauncher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit", tint = BlueMain)
@@ -132,16 +220,19 @@ fun InfoAnakScreen(navController: NavController) {
 
             item {
                 LabeledField(label = "Nama Lengkap") {
-                    OutlinedInput(value = name, onValueChange = { name = it })
+                    OutlinedInput(
+                        value = state.fullName,
+                        onValueChange = { viewModel.onNameChange(it) }
+                    )
                 }
             }
 
             item {
                 LabeledField(label = "Tanggal Lahir") {
                     OutlinedInput(
-                        value = birth,
-                        onValueChange = { birth = it },
-                        keyboardType = KeyboardType.Number
+                        value = state.birthDate,
+                        onValueChange = { viewModel.onBirthDateChange(it) },
+                        placeholder = "YYYY-MM-DD"
                     )
                 }
             }
@@ -156,13 +247,13 @@ fun InfoAnakScreen(navController: NavController) {
                     ) {
                         GenderOption(
                             text = "Perempuan",
-                            selected = gender == "P",
-                            onClick = { gender = "P" }
+                            selected = state.gender == "female",
+                            onClick = { viewModel.onGenderChange("female") }
                         )
                         GenderOption(
                             text = "Laki-Laki",
-                            selected = gender == "L",
-                            onClick = { gender = "L" }
+                            selected = state.gender == "male",
+                            onClick = { viewModel.onGenderChange("male") }
                         )
                     }
                 }
@@ -179,21 +270,42 @@ fun InfoAnakScreen(navController: NavController) {
             }
 
             item {
-                Text(text = "Foto Si Kecil", fontSize = 16.sp, color = Color.Black, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .dashedBorder(2.dp, BlueMain, 32.dp, on = 14f, off = 10f)
-                        .clip(RoundedCornerShape(32.dp))
-                        .clickable { /* TODO: pick image */ },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = BlueMain)
-                        Spacer(Modifier.width(6.dp))
-                        Text(text = "+ Unggah Foto", color = BlueMain, fontWeight = FontWeight.SemiBold)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "Foto Si Kecil", fontSize = 16.sp, color = Color.Black)
+                    Spacer(Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .dashedBorder(2.dp, BlueMain, 32.dp, on = 14f, off = 10f)
+                            .clip(RoundedCornerShape(32.dp))
+                            .clickable { babyPhotoLauncher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (state.babyPhotoUri != null || state.babyPhotoUrl.isNotBlank()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (state.isUploadingBaby) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = BlueMain
+                                    )
+                                }
+                                Text(
+                                    text = if (state.isUploadingBaby) "Mengunggah..." else "Foto berhasil dipilih ✓",
+                                    color = BlueMain,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = BlueMain)
+                                Spacer(Modifier.width(6.dp))
+                                Text(text = "+ Unggah Foto", color = BlueMain, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
                     }
                 }
             }
@@ -201,8 +313,8 @@ fun InfoAnakScreen(navController: NavController) {
             item {
                 LabeledField(label = "Berat Badan Saat Lahir (Kg)") {
                     OutlinedInput(
-                        value = weight,
-                        onValueChange = { weight = it },
+                        value = state.birthWeight,
+                        onValueChange = { viewModel.onBirthWeightChange(it) },
                         keyboardType = KeyboardType.Decimal
                     )
                 }
@@ -211,10 +323,22 @@ fun InfoAnakScreen(navController: NavController) {
             item {
                 LabeledField(label = "Riwayat Diagnosis") {
                     OutlinedInput(
-                        value = diagnosis,
-                        onValueChange = { diagnosis = it }
+                        value = state.diagnosisHistory,
+                        onValueChange = { viewModel.onDiagnosisChange(it) }
                     )
                 }
+            }
+        }
+
+        // Loading overlay
+        if (state.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = BlueMain)
             }
         }
     }
@@ -232,12 +356,16 @@ private fun LabeledField(label: String, content: @Composable () -> Unit) {
 private fun OutlinedInput(
     value: String,
     onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    placeholder: String = ""
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
+        placeholder = if (placeholder.isNotBlank()) {
+            { Text(placeholder, color = Color.Gray) }
+        } else null,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = Modifier
             .fillMaxWidth()
@@ -295,3 +423,15 @@ private fun Modifier.dashedBorder(width: Dp, color: Color, radius: Dp, on: Float
             )
         }
     )
+
+private fun uriToByteArray(context: Context, uri: Uri): ByteArray? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        inputStream?.copyTo(byteArrayOutputStream)
+        inputStream?.close()
+        byteArrayOutputStream.toByteArray()
+    } catch (e: Exception) {
+        null
+    }
+}
