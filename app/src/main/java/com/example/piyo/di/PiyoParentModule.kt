@@ -3,6 +3,7 @@ package com.example.piyo.di
 import com.example.piyo.data.mapper.education.EducationContentMapper
 import com.example.piyo.data.mapper.quiz.QuizMapper
 import com.example.piyo.data.remote.EducationContentService
+import com.example.piyo.data.remote.QuizContentService
 import com.example.piyo.data.remote.QuizService
 import com.example.piyo.data.repository.education.EducationContentRepositoryImpl
 import com.example.piyo.data.repository.quiz.QuizRepositoryImpl
@@ -20,6 +21,7 @@ val piyoParentModule = module {
     // Remote Services
     single { EducationContentService(firestore = get()) }
     single { QuizService(firestore = get()) }
+    single { QuizContentService(firestore = get()) }
 
     // Mappers
     single { EducationContentMapper() }
@@ -34,7 +36,8 @@ val piyoParentModule = module {
     }
     single<QuizRepository> {
         QuizRepositoryImpl(
-            service = get(),
+            contentService = get(),
+            quizService = get(),
             mapper = get()
         )
     }
@@ -57,4 +60,3 @@ val piyoParentModule = module {
         )
     }
 }
-
