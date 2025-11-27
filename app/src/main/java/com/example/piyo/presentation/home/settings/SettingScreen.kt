@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.piyo.R
+import com.example.piyo.presentation.navigation.KeamananIzinRoute
 import com.example.piyo.ui.theme.BlueMain
 import com.example.piyo.ui.theme.YellowMain
 import com.example.piyo.util.FirebaseUtils
@@ -88,7 +89,7 @@ fun SettingScreen(
                 icon = { LeadingIcon(icon = Icons.Outlined.Security) },
                 title = "Keamanan & Izin",
                 subtitle = "Amankan akun Anda demi keamanan",
-                onClick = { /* TODO */ }
+                onClick = { navController.navigate(KeamananIzinRoute) }
             )
 
             SettingItem(

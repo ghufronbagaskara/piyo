@@ -194,6 +194,19 @@ fun LoginScreen(
             }
 
 
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(onClick = { /* TODO: Implementasi navigasi lupa password */ }) {
+                                        Text(
+                                            text = "Lupa password?",
+                                            color = BlueMain,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
             Spacer(Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),

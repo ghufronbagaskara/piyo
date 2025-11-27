@@ -11,6 +11,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.example.piyo.presentation.home.beranda.BerandaScreen
+import com.example.piyo.presentation.home.parent.ChatBotScreen
+import com.example.piyo.presentation.home.notifications.NotifikasiScreen
+import com.example.piyo.presentation.home.insight.InsightScreen
+import com.example.piyo.presentation.home.settings.KeamananIzinScreen
 import com.example.piyo.presentation.home.dashboard.PiyoHomeScreen
 import com.example.piyo.presentation.home.parent.ChatBotScreen
 import com.example.piyo.presentation.home.parent.PiyoParentScreen
@@ -33,7 +38,7 @@ fun MainNavigation(
                 onItemClick = {
                     selectedItem = it
                     when (it) {
-                        0 -> navigateToTab(navController, PiyoHomeRoute)
+                        0 -> navigateToTab(navController, HomeRoute)
                         1 -> navigateToTab(navController, PiyoParentRoute)
                         2 -> navigateToTab(navController, PiyoPlanRoute)
                         3 -> navigateToTab(navController, SettingsRoute)
@@ -42,8 +47,25 @@ fun MainNavigation(
             )
         }
     ) { innerPadding ->
+
         NavHost(
             navController = navController,
+            startDestination = HomeRoute,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+
+            composable<HomeRoute> {
+                BerandaScreen(navController = navController)
+            }
+
+            composable<NotifikasiRoute> {
+                NotifikasiScreen(navController = navController)
+            }
+
+            composable<InsightRoute> {
+                InsightScreen(navController = navController)
+            }
+
             startDestination = PiyoHomeRoute,
             modifier = modifier.padding(innerPadding)
         ) {
@@ -53,6 +75,7 @@ fun MainNavigation(
             composable<ChatbotRoute> {
                 ChatBotScreen(navController = navController)
             }
+
             composable<PiyoParentRoute> {
                 PiyoParentScreen(
                     onNavigateToChatBot = {
@@ -67,9 +90,11 @@ fun MainNavigation(
                     }
                 )
             }
+
             composable<PiyoPlanRoute> {
                 PlaceholderScreen("Piyo Plan")
             }
+
             composable<SettingsRoute> {
                 SettingScreen(
                     navController = navController,
