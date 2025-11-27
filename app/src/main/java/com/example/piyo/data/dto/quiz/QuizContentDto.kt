@@ -2,7 +2,7 @@ package com.example.piyo.data.dto.quiz
 
 import com.google.firebase.firestore.DocumentId
 
-data class QuizDto(
+data class ParentingQuizDto(
     @DocumentId
     val id: String? = null,
     val ageSegment: String? = null,
@@ -18,4 +18,3 @@ data class QuestionDto(
     val correctAnswerIndex: Int? = null,
     val reason: String? = null
 )
-
