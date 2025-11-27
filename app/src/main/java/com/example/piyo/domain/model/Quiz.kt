@@ -2,13 +2,17 @@ package com.example.piyo.domain.model
 
 data class Quiz(
     val id: String = "",
+    val ageSegment: String = "",
     val title: String = "",
-    val thumbnail: String = "",
-    val description: String = "",
-    val totalQuestions: Int = 0,
-    val duration: Int = 0, // in seconds
-    val difficulty: String = "", // "beginner", "intermediate", "advanced"
-    val createdAt: Long = 0L,
-    val tags: List<String> = emptyList()
+    val duration: Int = 0,
+    val questions: List<Question> = emptyList()
+)
+
+data class Question(
+    val aspect: String = "",
+    val question: String = "",
+    val options: List<String> = emptyList(),
+    val correctAnswerIndex: Int = 0,
+    val reason: String = ""
 )
 
