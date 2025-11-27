@@ -4,6 +4,8 @@ import android.app.Application
 import com.example.piyo.di.appModule
 import com.example.piyo.di.childModule
 import com.example.piyo.di.piyoParentModule
+import com.example.piyo.di.quizModule
+import com.example.piyo.di.userModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -24,7 +26,9 @@ class MainApp : Application() {
             modules(
                 appModule,
                 piyoParentModule,
-                childModule
+                childModule,
+                userModule,
+                quizModule
             )
         }
     }
