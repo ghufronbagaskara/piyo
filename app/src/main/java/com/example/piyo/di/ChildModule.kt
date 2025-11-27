@@ -30,10 +30,11 @@ val childModule = module {
 
     // Use Cases
     factory { CreateOrUpdateChildUseCase(get()) }
+    factory { GetChildByIdUseCase(get()) }
     factory { UploadChildProfilePhotoUseCase(get()) }
     factory { UploadBabyPhotoUseCase(get()) }
-    factory { GetChildByIdUseCase(get()) }
     factory { GetChildrenByParentIdUseCase(get()) }
+    factory { CheckUserHasChildUseCase(get()) }
 
     // ViewModel
     viewModel {
@@ -46,4 +47,3 @@ val childModule = module {
         )
     }
 }
-
