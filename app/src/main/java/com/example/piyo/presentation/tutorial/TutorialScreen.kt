@@ -4,17 +4,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,7 +33,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TutorialScreen(navController: NavController) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val totalPages = 3
+    val pagerState = rememberPagerState(pageCount = { totalPages })
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -42,12 +46,12 @@ fun TutorialScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
             ) {
                 Button(
                     onClick = {
                         scope.launch {
-                            if (pagerState.currentPage < 2) {
+                            if (pagerState.currentPage < totalPages - 1) {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             } else {
                                 navController.navigate(LoginRoute)
@@ -61,7 +65,7 @@ fun TutorialScreen(navController: NavController) {
                     shape = RoundedCornerShape(50)
                 ) {
                     Text(
-                        text = if (pagerState.currentPage < 2) "Selanjutnya" else "Selesai",
+                        text = if (pagerState.currentPage < totalPages - 1) "Selanjutnya" else "Selesai",
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 16.sp
@@ -104,11 +108,11 @@ fun TutorialScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Top
             ) {
 
+                // Top row: Back | Progress indicator (center) | Lewati
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .padding(top = 20.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (pagerState.currentPage > 0) {
@@ -118,7 +122,7 @@ fun TutorialScreen(navController: NavController) {
                             }
                         }) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Color.Black
                             )
@@ -126,26 +130,46 @@ fun TutorialScreen(navController: NavController) {
                     } else {
                         Spacer(modifier = Modifier.size(48.dp))
                     }
+
+                    // Center progress indicator
+                    Box(modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp, end = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ProgressIndicatorWithThumb(
+                            currentPage = pagerState.currentPage,
+                            totalPages = totalPages,
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        )
+                    }
+
                     Text(
                         text = "Lewati",
                         color = Color.Gray,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.clickable { navController.navigate(LoginRoute) }
+                        modifier = Modifier
+                            .clickable { navController.navigate(LoginRoute) }
+                            .padding(start = 8.dp)
                     )
                 }
 
-                ProgressIndicatorBar(
-                    currentPage = pagerState.currentPage,
-                    totalPages = 3
-                )
-
+                // small page count on the right under the top bar (matching sample image style)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Text(
+                        text = "${pagerState.currentPage + 1}/$totalPages",
+                        color = BlueMain,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(top = 20.dp),
+                        .padding(top = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     HorizontalPager(state = pagerState) { page ->
@@ -187,42 +211,62 @@ fun TutorialPage(page: Int) {
             painter = painterResource(id = imageRes),
             contentDescription = title,
             modifier = Modifier
-                .fillMaxWidth(0.9f)
+                .fillMaxWidth(0.85f)
                 .aspectRatio(0.85f)
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(text = title, color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(28.dp))
+        Text(text = title, color = Color.Black, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
+        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = desc,
             fontSize = 16.sp,
             color = Color.Gray,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 8.dp)
+            modifier = Modifier.padding(horizontal = 12.dp)
         )
     }
 }
 
 @Composable
-fun ProgressIndicatorBar(currentPage: Int, totalPages: Int) {
-    Row(
-        modifier = Modifier
+fun ProgressIndicatorWithThumb(currentPage: Int, totalPages: Int, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier = modifier.height(40.dp)) {
+        val fullWidthPx = constraints.maxWidth
+        val fullWidthDp = with(LocalDensity.current) { fullWidthPx.toDp() }
+        val thumbSize = 18.dp
+        val segmentSpacing = 8.dp
+
+        // segments row
+        Row(modifier = Modifier
             .fillMaxWidth()
-            .height(6.dp)
-            .padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(totalPages) { index ->
-            Box(
-                modifier = Modifier
+            .height(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(segmentSpacing)
+        ) {
+            repeat(totalPages) { index ->
+                Box(modifier = Modifier
                     .weight(1f)
-                    .height(5.dp)
-                    .padding(horizontal = 3.dp)
+                    .fillMaxHeight()
                     .background(
-                        if (index <= currentPage) BlueMain else Color(0xFFD9E5EE),
+                        color = if (index <= currentPage) BlueMain else Color(0xFFD9E5EE),
                         shape = RoundedCornerShape(50)
                     )
+                )
+            }
+        }
+
+        // thumb overlay
+        if (totalPages > 1) {
+            // compute x offset in dp where thumb center should be
+            val availableWidthDp = fullWidthDp - segmentSpacing * (totalPages - 1)
+            val segmentWidthDp = availableWidthDp / totalPages
+            val centerOffsetDp = segmentWidthDp * (currentPage + 0.5f) + segmentSpacing * currentPage
+            val thumbOffsetDp = centerOffsetDp - (thumbSize / 2f)
+
+            Box(
+                modifier = Modifier
+                    .offset(x = thumbOffsetDp)
+                    .size(thumbSize)
+                    .background(color = BlueMain, shape = CircleShape)
+                    .align(Alignment.CenterStart)
             )
         }
     }
