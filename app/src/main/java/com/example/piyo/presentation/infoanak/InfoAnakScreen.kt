@@ -90,7 +90,10 @@ fun InfoAnakScreen(
         if (state.success) {
             snackbarHostState.showSnackbar("Informasi anak berhasil disimpan")
             viewModel.resetSuccess()
-            navController.popBackStack()
+            // Navigate to MainRoute instead of popping back
+            navController.navigate(com.example.piyo.presentation.navigation.MainRoute) {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
 
