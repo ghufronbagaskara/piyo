@@ -9,7 +9,7 @@ data class EducationContentDto(
     val thumbnail: String? = null,
     val description: String? = null,
     val duration: String? = null,
+    val createdBy: String? = null,
     val createdAt: Timestamp? = null,
     val tags: List<String>? = null
 )
-
