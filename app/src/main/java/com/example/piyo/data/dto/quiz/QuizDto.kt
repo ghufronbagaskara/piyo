@@ -10,7 +10,7 @@ data class QuizDto(
     val totalQuestions: Int? = null,
     val duration: Int? = null,
     val difficulty: String? = null,
+    val createdBy: String? = null,
     val createdAt: Timestamp? = null,
     val tags: List<String>? = null
 )
-
