@@ -3,6 +3,7 @@ package com.example.piyo.di
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import org.koin.dsl.module
 
 val appModule = module {
@@ -11,6 +12,7 @@ val appModule = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
     single { FirebaseDatabase.getInstance() }
+    single { FirebaseStorage.getInstance() }
 
     // Retrofit (jika nanti butuh REST API)
     // single { provideRetrofit() }
