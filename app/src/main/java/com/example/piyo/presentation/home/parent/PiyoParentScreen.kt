@@ -1,6 +1,5 @@
 package com.example.piyo.presentation.home.parent
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.piyo.R
 import com.example.piyo.domain.model.EducationContent
-import com.example.piyo.domain.model.Quiz
+import com.example.piyo.domain.model.QuizItem
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -312,7 +311,7 @@ fun EducationContentItem(
 
 @Composable
 fun QuizList(
-    quizzes: List<Quiz>,
+    quizzes: List<QuizItem>,
     isLoading: Boolean,
     error: String?,
     onItemClick: (String) -> Unit
@@ -369,7 +368,7 @@ fun QuizList(
 
 @Composable
 fun QuizItem(
-    quiz: Quiz,
+    quiz: com.example.piyo.domain.model.QuizItem,
     onClick: () -> Unit
 ) {
     Box(
@@ -381,14 +380,15 @@ fun QuizItem(
             .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left side - Quiz info
+            // Left side - Text content
             Column(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(1.5f)
                     .fillMaxHeight()
-                    .padding(20.dp),
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
