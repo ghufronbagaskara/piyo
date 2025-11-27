@@ -2,6 +2,7 @@ package com.example.piyo
 
 import android.app.Application
 import com.example.piyo.di.appModule
+import com.example.piyo.di.childModule
 import com.example.piyo.di.piyoParentModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -22,7 +23,8 @@ class MainApp : Application() {
             // Load modules
             modules(
                 appModule,
-                piyoParentModule
+                piyoParentModule,
+                childModule
             )
         }
     }
