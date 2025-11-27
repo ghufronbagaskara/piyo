@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.database.ktx)
     implementation(libs.play.services.auth)
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     // Hilt
 //    implementation(libs.hilt.android)
