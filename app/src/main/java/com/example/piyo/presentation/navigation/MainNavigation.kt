@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
+import com.example.piyo.presentation.home.dashboard.PiyoHomeScreen
 import com.example.piyo.presentation.home.parent.ChatBotScreen
 import com.example.piyo.presentation.home.parent.PiyoParentScreen
 import com.example.piyo.presentation.home.settings.SettingScreen
@@ -32,7 +33,7 @@ fun MainNavigation(
                 onItemClick = {
                     selectedItem = it
                     when (it) {
-                        0 -> navigateToTab(navController, ChatbotRoute)
+                        0 -> navigateToTab(navController, PiyoHomeRoute)
                         1 -> navigateToTab(navController, PiyoParentRoute)
                         2 -> navigateToTab(navController, PiyoPlanRoute)
                         3 -> navigateToTab(navController, SettingsRoute)
@@ -43,9 +44,12 @@ fun MainNavigation(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = ChatbotRoute,
+            startDestination = PiyoHomeRoute,
             modifier = modifier.padding(innerPadding)
         ) {
+            composable<PiyoHomeRoute> {
+                PiyoHomeScreen()
+            }
             composable<ChatbotRoute> {
                 ChatBotScreen(navController = navController)
             }
