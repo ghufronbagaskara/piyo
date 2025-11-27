@@ -23,7 +23,7 @@ data object InfoAnakRoute : AppRoute
 data object MainRoute : AppRoute
 
 @Serializable
-data object HomeRoute : AppRoute
+data object PiyoHomeRoute : AppRoute
 
 @Serializable
 data object PiyoParentRoute : AppRoute
