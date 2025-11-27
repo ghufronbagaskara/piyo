@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piyo.domain.model.EducationContent
-import com.example.piyo.domain.model.Quiz
+import com.example.piyo.domain.model.QuizItem
 import com.example.piyo.domain.usecase.education.ObserveEducationContentsUseCase
 import com.example.piyo.domain.usecase.education.SearchEducationContentsUseCase
 import com.example.piyo.domain.usecase.quiz.ObserveQuizzesUseCase
@@ -139,10 +139,9 @@ data class PiyoParentUiState(
     val selectedTabIndex: Int = 0,
     val searchQuery: String = "",
     val educationContents: List<EducationContent> = emptyList(),
-    val quizzes: List<Quiz> = emptyList(),
+    val quizzes: List<QuizItem> = emptyList(),
     val isEducationLoading: Boolean = true,
     val isQuizLoading: Boolean = true,
     val educationError: String? = null,
     val quizError: String? = null
 )
-
