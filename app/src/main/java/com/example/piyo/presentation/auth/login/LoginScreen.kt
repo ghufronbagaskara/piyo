@@ -19,19 +19,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.piyo.R
+import com.example.piyo.domain.usecase.child.CheckUserHasChildUseCase
 import com.example.piyo.presentation.navigation.InfoAnakRoute
+import com.example.piyo.presentation.navigation.MainRoute
 import com.example.piyo.presentation.navigation.RegisterRoute
 import com.example.piyo.ui.theme.BlueMain
 import com.example.piyo.ui.theme.YellowMain
 import com.example.piyo.util.FirebaseUtils
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(
+    navController: NavController,
+    checkUserHasChildUseCase: CheckUserHasChildUseCase = koinInject()
+) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var rememberMe by rememberSaveable { mutableStateOf(false) }
     var showPassword by rememberSaveable { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     val isValid = email.isNotBlank() && password.isNotBlank()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -139,31 +146,51 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     scope.launch {
+                        isLoading = true
                         try {
                             val user = FirebaseUtils.loginUser(email, password)
                             if (user != null) {
-                                navController.navigate(InfoAnakRoute)
+                                // Check if user already has child data
+                                val hasChild = checkUserHasChildUseCase(user.uid)
+                                if (hasChild) {
+                                    // User has child, go to main screen
+                                    navController.navigate(MainRoute) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                } else {
+                                    // User doesn't have child, go to info anak
+                                    navController.navigate(InfoAnakRoute) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             } else {
                                 snackbarHostState.showSnackbar("Login gagal. Periksa kembali akun Anda.")
                             }
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar("Error: ${e.message}")
+                        } finally {
+                            isLoading = false
                         }
                     }
                 },
-                enabled = isValid,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp),
+                    .height(56.dp),
                 shape = RoundedCornerShape(36.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = YellowMain,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFD6D1CC),
-                    disabledContentColor = Color.White
-                )
+                    containerColor = BlueMain,
+                    disabledContainerColor = Color(0xFFBDBDBD)
+                ),
+                enabled = isValid && !isLoading
             ) {
-                Text(text = "Masuk", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Masuk", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
 

@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hiltAndroid)
+//    alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.google.services)
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization") version "2.0.21"
@@ -63,11 +63,17 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.database.ktx)
     implementation(libs.play.services.auth)
+    implementation("com.google.firebase:firebase-storage-ktx")
 
     // Hilt
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-    ksp(libs.hilt.compiler)
+//    implementation(libs.hilt.android)
+//    implementation(libs.hilt.navigation.compose)
+//    ksp(libs.hilt.compiler)
+
+    // Koin
+    implementation("io.insert-koin:koin-android:3.5.6")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
+    implementation("io.insert-koin:koin-core:3.5.6")
 
     // Core libraries
     implementation(libs.androidx.core.ktx)

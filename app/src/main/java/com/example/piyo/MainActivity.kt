@@ -10,20 +10,20 @@ import androidx.compose.ui.graphics.Color
 import com.example.piyo.presentation.navigation.MainRoute
 import com.example.piyo.presentation.navigation.SplashRoute
 import com.example.piyo.presentation.navigation.TutorialNavigation
+import com.example.piyo.seed.EducationSeeder
 import com.example.piyo.ui.theme.PiyoTheme
 import com.example.piyo.util.FirebaseUtils
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+//        EducationSeeder.seed()
         setContent {
             PiyoTheme {
                 val startDestination = if (FirebaseUtils.isUserLoggedIn()) MainRoute else SplashRoute
-//                TransparentSystemBars()
+                // TransparentSystemBars()
                 TutorialNavigation(startDestination = startDestination)
             }
         }
