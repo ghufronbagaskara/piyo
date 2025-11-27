@@ -36,6 +36,7 @@ fun RegisterScreen(navController: NavController) {
     var showPw by rememberSaveable { mutableStateOf(false) }
     var showPw2 by rememberSaveable { mutableStateOf(false) }
     var agree by rememberSaveable { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -137,31 +138,42 @@ fun RegisterScreen(navController: NavController) {
             Button(
                 onClick = {
                     scope.launch {
+                        isLoading = true
                         try {
                             val user = FirebaseUtils.registerUser(email, password)
                             if (user != null) {
-                                navController.navigate(InfoAnakRoute)
+                                // After registration, always go to InfoAnakRoute
+                                navController.navigate(InfoAnakRoute) {
+                                    popUpTo(0) { inclusive = true }
+                                }
                             } else {
                                 snackbarHostState.showSnackbar("Registrasi gagal. Coba lagi.")
                             }
                         } catch (e: Exception) {
                             snackbarHostState.showSnackbar("Error: ${e.message}")
+                        } finally {
+                            isLoading = false
                         }
                     }
                 },
-                enabled = isValid,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp),
+                    .height(56.dp),
                 shape = RoundedCornerShape(36.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = YellowMain,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFD6D1CC),
-                    disabledContentColor = Color.White
-                )
+                    disabledContainerColor = Color(0xFFBDBDBD)
+                ),
+                enabled = isValid && !isLoading
             ) {
-                Text(text = "Daftar", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White
+                    )
+                } else {
+                    Text("Daftar", color = Color.Black, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
 
 
