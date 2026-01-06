@@ -18,14 +18,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.piyo.R
 import com.example.piyo.ui.theme.Sora
 
 @Composable
 fun ProfileHeader(
-    name: String = "Amalia Desafa!",
+    name: String = "Pengguna!",
+    photoUrl: String = "",
     modifier: Modifier = Modifier,
     onNotificationClick: () -> Unit = {},
     onSearch: (String) -> Unit = {}
@@ -41,7 +44,7 @@ fun ProfileHeader(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val avatarSize = 52.dp
                     val avatarImageSize = 44.dp
-                    val avatarUrl = "https://picsum.photos/200"
+
                     Box(
                         modifier = Modifier
                             .size(avatarSize)
@@ -52,26 +55,58 @@ fun ProfileHeader(
                         contentAlignment = Alignment.Center
                     ) {
                         val context = LocalContext.current
-                        AsyncImage(
-                            model = ImageRequest.Builder(context).data(avatarUrl).crossfade(true).build(),
-                            contentDescription = "Avatar",
-                            modifier = Modifier.size(avatarImageSize).clip(CircleShape)
-                        )
+                        if (photoUrl.isNotEmpty()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data(photoUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Avatar",
+                                modifier = Modifier
+                                    .size(avatarImageSize)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_child_placeholder),
+                                contentDescription = "Default Avatar",
+                                modifier = Modifier.size(avatarImageSize),
+                                tint = Color(0xFF1976D2)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Halo", style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B6B6B))
-                        Text(text = name, style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold), color = Color.Black)
+                        Text(
+                            text = "Halo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF6B6B6B)
+                        )
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold
+                            ),
+                            color = Color.Black,
+                            maxLines = 1
+                        )
                     }
 
                     IconButton(onClick = onNotificationClick) {
                         Box(
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE6F2FF)),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFE6F2FF)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notifikasi", tint = Color(0xFF1976D2))
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = "Notifikasi",
+                                tint = Color(0xFF1976D2)
+                            )
                         }
                     }
                 }
@@ -82,20 +117,43 @@ fun ProfileHeader(
                 Surface(
                     shape = RoundedCornerShape(24.dp),
                     color = Color.White,
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp).fillMaxSize()) {
-                        Icon(Icons.Default.Search, contentDescription = "Cari", tint = Color(0xFF6B6B6B))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .fillMaxSize()
+                    ) {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Cari",
+                            tint = Color(0xFF6B6B6B)
+                        )
                         Spacer(modifier = Modifier.width(12.dp))
                         Box(modifier = Modifier.fillMaxWidth()) {
                             BasicTextField(
                                 value = query,
-                                onValueChange = { query = it; onSearch(it) },
+                                onValueChange = {
+                                    query = it
+                                    onSearch(it)
+                                },
                                 singleLine = true,
-                                textStyle = TextStyle(color = Color.Black, fontSize = 16.sp),
+                                textStyle = TextStyle(
+                                    color = Color.Black,
+                                    fontSize = 16.sp
+                                ),
                                 modifier = Modifier.fillMaxWidth()
                             )
-                            if (query.isEmpty()) Text(text = "Cari", color = Color(0xFF8A8A8A), fontSize = 16.sp)
+                            if (query.isEmpty()) {
+                                Text(
+                                    text = "Cari",
+                                    color = Color(0xFF8A8A8A),
+                                    fontSize = 16.sp
+                                )
+                            }
                         }
                     }
                 }
