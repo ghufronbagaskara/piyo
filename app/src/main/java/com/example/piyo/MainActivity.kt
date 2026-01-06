@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.piyo.presentation.navigation.MainRoute
 import com.example.piyo.presentation.navigation.SplashRoute
 import com.example.piyo.presentation.navigation.TutorialNavigation
+import com.example.piyo.seed.ComprehensiveSeeder
 import com.example.piyo.seed.EducationSeeder
 import com.example.piyo.ui.theme.PiyoTheme
 import com.example.piyo.util.FirebaseUtils
@@ -19,11 +20,15 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 //        EducationSeeder.seed()
+        // Run comprehensive seeder to upload all quiz data
+//        ComprehensiveSeeder.seed()
+
         setContent {
             PiyoTheme {
                 val startDestination = if (FirebaseUtils.isUserLoggedIn()) MainRoute else SplashRoute
-                // TransparentSystemBars()
+//                 TransparentSystemBars()
                 TutorialNavigation(startDestination = startDestination)
             }
         }
