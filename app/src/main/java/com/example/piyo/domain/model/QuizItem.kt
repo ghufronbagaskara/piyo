@@ -8,6 +8,6 @@ data class QuizItem(
     val totalQuestions: Int = 0,
     val duration: Int = 0,
     val difficulty: String = "",
-    val tags: List<String> = emptyList()
+val tags: List<String> = emptyList()
 )
 
