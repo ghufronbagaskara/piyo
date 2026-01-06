@@ -21,7 +21,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val geminiKey: String = project.findProperty("GEMINI_API_KEY") as String? ?: "AIzaSyATlrsvrv8lUxfYu8afqzOIHgL7zsxfvyc"
+        val geminiKey: String = project.findProperty("GEMINI_API_KEY") as String? ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
 
@@ -33,24 +33,21 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "GEMINI_API_KEY", "\"AIzaSyATlrsvrv8lUxfYu8afqzOIHgL7zsxfvyc\"")
+            val geminiKey: String = project.findProperty("GEMINI_API_KEY") as String? ?: ""
+            buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
         }
         debug {
-            buildConfigField("String", "GEMINI_API_KEY", "\"AIzaSyATlrsvrv8lUxfYu8afqzOIHgL7zsxfvyc\"")
+            val geminiKey: String = project.findProperty("GEMINI_API_KEY") as String? ?: ""
+            buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
         }
 
     }
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
-        }
-    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "11"
     }
     buildFeatures {
         buildConfig = true
@@ -79,6 +76,11 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.5.6")
     implementation("io.insert-koin:koin-androidx-compose:3.5.6")
     implementation("io.insert-koin:koin-core:3.5.6")
+
+    // Room Database
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Core libraries
     implementation(libs.androidx.core.ktx)
@@ -115,10 +117,10 @@ dependencies {
 //    implementation(libs.vision.common)
 
     // CameraX
-//    implementation("androidx.camera:camera-core:1.3.4")
-//    implementation("androidx.camera:camera-camera2:1.3.4")
-//    implementation("androidx.camera:camera-lifecycle:1.3.4")
-//    implementation("androidx.camera:camera-view:1.3.4")
+    implementation("androidx.camera:camera-core:1.3.4")
+    implementation("androidx.camera:camera-camera2:1.3.4")
+    implementation("androidx.camera:camera-lifecycle:1.3.4")
+    implementation("androidx.camera:camera-view:1.3.4")
 
     // TensorFlow Lite
 //    implementation("org.tensorflow:tensorflow-lite:2.16.1")
