@@ -23,6 +23,15 @@ data object InfoAnakRoute : AppRoute
 data object MainRoute : AppRoute
 
 @Serializable
+data object HomeRoute : AppRoute
+
+@Serializable
+data object NotifikasiRoute : AppRoute
+
+@Serializable
+data object InsightRoute : AppRoute
+
+@Serializable
 data object PiyoHomeRoute : AppRoute
 
 @Serializable
@@ -35,13 +44,16 @@ data object PiyoPlanRoute : AppRoute
 data object SettingsRoute : AppRoute
 
 @Serializable
+data object KeamananIzinRoute : AppRoute
+
+@Serializable
 data object ChatbotRoute : AppRoute
 
 @Serializable
-data object NotifikasiRoute : AppRoute
+data class QuizIntroductionRoute(val childAge: Int, val childId: String) : AppRoute
 
 @Serializable
-data object InsightRoute : AppRoute
+data class QuizQuestionRoute(val childAge: Int, val childId: String) : AppRoute
 
 @Serializable
-data object KeamananIzinRoute : AppRoute
+data object QuizResultRoute : AppRoute
