@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,8 +39,10 @@ fun QuizQuestionScreen(
     // Navigate to result when quiz is completed
     LaunchedEffect(state.isQuizCompleted) {
         if (state.isQuizCompleted) {
-            navController.navigate("quiz_result") {
-                popUpTo("quiz_question/$childAge/$childId") { inclusive = true }
+            navController.navigate(com.example.piyo.presentation.navigation.QuizResultRoute) {
+                popUpTo(navController.graph.id) {
+                    inclusive = false
+                }
             }
         }
     }
@@ -97,7 +101,7 @@ fun QuizQuestionScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_lock_idle_alarm),
+                            imageVector = Icons.Outlined.Timer,
                             contentDescription = "Timer",
                             tint = Color.Black,
                             modifier = Modifier.size(20.dp)
@@ -227,4 +231,3 @@ private fun QuizOptionButton(
         )
     }
 }
-
