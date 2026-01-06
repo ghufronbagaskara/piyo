@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Protect API keys and sensitive data
+gradle.properties
+*.keystore
+*.jks
+google-services.json
