@@ -1,6 +1,5 @@
 package com.example.piyo.presentation.home.parent
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,197 +30,46 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.piyo.BuildConfig
 import com.example.piyo.R
 import com.example.piyo.ui.theme.BlueMain
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.generationConfig
 import kotlinx.coroutines.*
-import kotlinx.serialization.SerializationException
-
-data class ChatMessage(
-    val id: String,
-    val text: String,
-    val isUser: Boolean,
-    val isLoading: Boolean = false
-)
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatBotScreen(navController: NavController) {
+fun ChatBotScreen(
+    navController: NavController,
+    viewModel: ChatBotViewModel = koinViewModel()
+) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val uiState by viewModel.uiState.collectAsState()
     var input by remember { mutableStateOf("") }
-    var isProcessing by remember { mutableStateOf(false) }
     var scrollJob by remember { mutableStateOf<Job?>(null) }
-
-    val messages = remember {
-        mutableStateListOf(
-            ChatMessage("init_1", "Halo, kenalin namaku Piyo!", isUser = false),
-            ChatMessage(
-                "init_2",
-                "Aku adalah asisten virtual di aplikasi Piyo, yang dirancang untuk membantu orang tua dalam mendukung anak-anak berkebutuhan khusus, terutama autisme.",
-                isUser = false
-            ),
-            ChatMessage("init_3", "Bagaimana aku bisa membantu Anda hari ini?", isUser = false)
-        )
-    }
-
-    var generativeModel by remember { mutableStateOf<GenerativeModel?>(null) }
-    var modelStatus by remember { mutableStateOf("Menghubungkan...") }
-
-    LaunchedEffect(Unit) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        Log.d("ChatBot", "Init model with key length: ${apiKey.length}")
-
-        if (apiKey.length < 30) {
-            modelStatus = "❌ API Key tidak valid"
-            return@LaunchedEffect
-        }
-
-        val modelsToTry = listOf(
-            "gemini-2.0-flash",
-            "models/gemini-2.0-flash"
-        )
-
-        for (modelName in modelsToTry) {
-            try {
-                Log.d("ChatBot", "Trying model: $modelName")
-                val testModel = GenerativeModel(
-                    modelName = modelName,
-                    apiKey = apiKey,
-                    generationConfig = generationConfig {
-                        temperature = 0.7f
-                        maxOutputTokens = 500
-                        topP = 0.8f
-                    }
-                )
-
-                val testResponse = try {
-                    testModel.generateContent("test")
-                } catch (se: SerializationException) {
-                    // The library sometimes returns an error JSON that doesn't match the expected
-                    // schema (MissingField). If the error indicates the API key is rejected, stop trying.
-                    Log.e("ChatBot", "Serialization error while probing model $modelName: ${se.message}")
-                    modelStatus = "❌ API response error (check API key)"
-                    break
-                }
-
-                if (testResponse.text != null) {
-                    generativeModel = testModel
-                    modelStatus = "✅ Online"
-                    Log.d("ChatBot", "✓ Model $modelName works!")
-                    break
-                }
-            } catch (e: Exception) {
-                // If the API explicitly denies permission (e.g., leaked key), surface a clear status
-                val msg = e.message ?: "${e::class.simpleName}"
-                Log.e("ChatBot", "Model $modelName failed: $msg")
-                if (msg.contains("PERMISSION_DENIED") || msg.contains("leaked", true) || msg.contains("permission_denied", true)) {
-                    modelStatus = "❌ API key rejected (permission denied). Replace the key."
-                    break
-                }
-                // otherwise continue to next candidate
-            }
-        }
-
-        if (generativeModel == null) {
-            modelStatus = "❌ Gagal terhubung"
-        }
-    }
 
     fun scrollToBottom() {
         scrollJob?.cancel()
         scrollJob = scope.launch {
             delay(50)
-            if (messages.isNotEmpty()) {
-                listState.scrollToItem(messages.size - 1)
+            if (uiState.messages.isNotEmpty()) {
+                listState.scrollToItem(uiState.messages.size - 1)
             }
         }
     }
 
     fun sendMessage() {
-        if (isProcessing || input.isBlank()) return
-        val model = generativeModel ?: run {
-            messages.add(
-                ChatMessage(
-                    "error_${System.currentTimeMillis()}",
-                    "❌ Gemini API tidak tersedia. Periksa API Key.",
-                    isUser = false
-                )
-            )
-            scrollToBottom()
-            return
-        }
+        if (uiState.isProcessing || input.isBlank()) return
 
         val text = input.trim()
-        isProcessing = true
         keyboardController?.hide()
         input = ""
 
-        val userMsgId = "user_${System.currentTimeMillis()}"
-        val loadingId = "loading_${System.currentTimeMillis()}"
-        messages.add(ChatMessage(userMsgId, text, isUser = true))
-        scrollToBottom()
-
-        scope.launch {
-            delay(100)
-            messages.add(ChatMessage(loadingId, "...", isUser = false, isLoading = true))
-            scrollToBottom()
-
-            try {
-                val prompt = """
-                    Kamu adalah asisten virtual bernama Piyo.
-                    Piyo membantu orang tua dengan anak berkebutuhan khusus (autisme).
-                    Jawablah dengan empati, bahasa Indonesia yang lembut dan mudah dimengerti.
-                    Hindari istilah medis rumit. Jawaban maksimal 4 kalimat.
-
-                    Pertanyaan pengguna: "$text"
-                """.trimIndent()
-
-                val reply = try {
-                    val response = withContext(Dispatchers.IO) {
-                        try {
-                            model.generateContent(prompt)
-                        } catch (se: SerializationException) {
-                            // Handle unexpected error format from server
-                            Log.e("ChatBot", "SerializationException during generateContent: ${se.message}")
-                            throw Exception("API response format error")
-                        }
-                    }
-
-                    response.text?.trim() ?: throw Exception("Empty response")
-                } catch (e: Exception) {
-                    // Bubble up as an exception to be handled by the outer try/catch below
-                    throw e
-                }
-
-                val loadingIndex = messages.indexOfFirst { it.id == loadingId }
-                if (loadingIndex != -1) messages.removeAt(loadingIndex)
-                delay(50)
-
-                messages.add(ChatMessage("bot_${System.currentTimeMillis()}", reply, isUser = false))
-            } catch (e: Exception) {
-                val loadingIndex = messages.indexOfFirst { it.id == loadingId }
-                if (loadingIndex != -1) messages.removeAt(loadingIndex)
-                delay(50)
-                messages.add(
-                    ChatMessage(
-                        "error_${System.currentTimeMillis()}",
-                        "❌ ${e.message ?: "Terjadi kesalahan"}",
-                        isUser = false
-                    )
-                )
-            } finally {
-                isProcessing = false
-                scrollToBottom()
-            }
-        }
+        viewModel.sendMessage(text)
     }
 
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(uiState.messages.size) {
         delay(100)
         scrollToBottom()
     }
@@ -270,19 +118,20 @@ fun ChatBotScreen(navController: NavController) {
                             color = Color(0xFF1F1F1F)
                         )
                         Text(
-                            text = modelStatus,
+                            text = if (uiState.isLoadingChildren) {
+                                "Memuat data anak..."
+                            } else if (uiState.children.isNotEmpty()) {
+                                "✅ Terhubung dengan ${uiState.children.size} anak"
+                            } else {
+                                "✅ Online"
+                            },
                             fontSize = 12.sp,
-                            color = when {
-                                modelStatus.contains("Online", true) -> Color(0xFF10B981)
-                                modelStatus.contains("Menghubungkan", true) -> Color(0xFFF59E0B)
-                                else -> Color(0xFFEF4444)
-                            }
+                            color = Color(0xFF10B981)
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // Notifications button (navigates to NotifikasiRoute)
                     IconButton(onClick = {
                         navController.navigate(com.example.piyo.presentation.navigation.NotifikasiRoute)
                     }) {
@@ -292,7 +141,6 @@ fun ChatBotScreen(navController: NavController) {
                             tint = Color(0xFF1F1F1F)
                         )
                     }
-
                 }
             }
 
@@ -304,7 +152,7 @@ fun ChatBotScreen(navController: NavController) {
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(vertical = 16.dp),
-                userScrollEnabled = !isProcessing
+                userScrollEnabled = !uiState.isProcessing
             ) {
                 item(key = "day_chip") {
                     Box(
@@ -315,7 +163,7 @@ fun ChatBotScreen(navController: NavController) {
                     }
                 }
 
-                items(messages, key = { it.id }) { msg ->
+                items(uiState.messages, key = { it.id }) { msg ->
                     when {
                         msg.isUser -> UserBubble(msg.text)
                         msg.isLoading -> BotTypingBubble()
@@ -343,38 +191,39 @@ fun ChatBotScreen(navController: NavController) {
                         placeholder = {
                             Text("Tulis pesan...", color = Color(0xFF9E9E9E), fontSize = 14.sp)
                         },
-                        enabled = !isProcessing,
+                        enabled = !uiState.isProcessing,
                         maxLines = 4,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Text,
                             imeAction = ImeAction.Send
                         ),
                         keyboardActions = KeyboardActions(
-                            onSend = { if (input.trim().isNotEmpty()) sendMessage() }
+                            onSend = { sendMessage() }
                         ),
-                        modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(24.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFDADADA),
-                            unfocusedBorderColor = Color(0xFFE6E6E6),
-                            disabledBorderColor = Color(0xFFE6E6E6),
-                            focusedContainerColor = Color(0xFFF8F8F8),
-                            unfocusedContainerColor = Color(0xFFF8F8F8),
-                            disabledContainerColor = Color(0xFFF0F0F0),
-                            cursorColor = BlueMain
-                        )
+                            focusedBorderColor = BlueMain,
+                            unfocusedBorderColor = Color(0xFFE0E0E0),
+                            disabledBorderColor = Color(0xFFE0E0E0),
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color(0xFFF5F5F5)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp, max = 120.dp)
                     )
 
-                    IconButton(
+                    Button(
                         onClick = { sendMessage() },
-                        enabled = input.trim().isNotEmpty() && !isProcessing,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                if (input.trim().isNotEmpty() && !isProcessing)
-                                    BlueMain else Color(0xFFE0E0E0),
-                                shape = CircleShape
-                            )
+                        enabled = input.isNotBlank() && !uiState.isProcessing,
+                        modifier = Modifier.size(48.dp),
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BlueMain,
+                            disabledContainerColor = Color(0xFFE0E0E0)
+                        ),
+                        contentPadding = PaddingValues(0.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Send,
