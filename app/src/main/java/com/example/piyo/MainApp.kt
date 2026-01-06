@@ -2,8 +2,12 @@ package com.example.piyo
 
 import android.app.Application
 import com.example.piyo.di.appModule
+import com.example.piyo.di.berandaModule
+import com.example.piyo.di.chatBotModule
 import com.example.piyo.di.childModule
+import com.example.piyo.di.databaseModule
 import com.example.piyo.di.piyoParentModule
+import com.example.piyo.di.piyoPlanModule
 import com.example.piyo.di.quizModule
 import com.example.piyo.di.userModule
 import org.koin.android.ext.koin.androidContext
@@ -25,10 +29,14 @@ class MainApp : Application() {
             // Load modules
             modules(
                 appModule,
+                databaseModule, // Room Database
                 piyoParentModule,
                 childModule,
                 userModule,
-                quizModule
+                quizModule,
+                berandaModule,
+                piyoPlanModule,
+                chatBotModule // Add ChatBot module
             )
         }
     }
