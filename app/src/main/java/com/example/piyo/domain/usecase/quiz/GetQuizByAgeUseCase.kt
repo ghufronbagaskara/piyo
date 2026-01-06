@@ -8,14 +8,13 @@ class GetQuizByAgeUseCase(
 ) {
     suspend operator fun invoke(childAge: Int): Result<Quiz> {
         val segment = when (childAge) {
-            in 2..5 -> "balita"
-            in 6..9 -> "sd"
-            in 10..12 -> "praremaja"
-            in 13..17 -> "remaja"
-            else -> return Result.failure(Exception("Usia anak tidak valid untuk quiz"))
+            in 2..4 -> "2-4"
+            in 5..7 -> "5-7"
+            in 8..12 -> "8-12"
+            in 13..17 -> "13-17"
+            else -> "18+" // For 18 years old and above (including 22 year old)
         }
 
         return repository.getQuizByAgeSegment(segment)
     }
 }
-
