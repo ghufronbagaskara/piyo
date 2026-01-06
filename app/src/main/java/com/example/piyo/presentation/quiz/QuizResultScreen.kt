@@ -43,7 +43,15 @@ fun QuizResultScreen(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        // Navigate back to PiyoParent when back button pressed
+                        navController.navigate(com.example.piyo.presentation.navigation.PiyoParentRoute) {
+                            popUpTo(com.example.piyo.presentation.navigation.PiyoParentRoute) {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
@@ -160,8 +168,13 @@ fun QuizResultScreen(
 
             Button(
                 onClick = {
-                    navController.navigate("parent_screen") {
-                        popUpTo("quiz_introduction") { inclusive = true }
+                    // Navigate back to PiyoParent screen (Kuis tab)
+                    navController.navigate(com.example.piyo.presentation.navigation.PiyoParentRoute) {
+                        // Clear all quiz-related screens from back stack
+                        popUpTo(com.example.piyo.presentation.navigation.PiyoParentRoute) {
+                            inclusive = false
+                        }
+                        launchSingleTop = true
                     }
                 },
                 modifier = Modifier
