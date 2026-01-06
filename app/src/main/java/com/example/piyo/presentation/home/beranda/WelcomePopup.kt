@@ -20,23 +20,42 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun WelcomePopup(visible: Boolean, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+fun WelcomePopup(
+    visible: Boolean,
+    userName: String = "Pengguna",
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     if (!visible) return
-    Popup(alignment = Alignment.BottomStart, properties = PopupProperties(focusable = true)) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+    Popup(
+        alignment = Alignment.BottomStart,
+        properties = PopupProperties(focusable = true)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomStart
+        ) {
             Card(
                 modifier = Modifier
                     .width(340.dp)
                     .padding(start = 16.dp, bottom = 86.dp)
                     .then(modifier),
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 10.dp, bottomStart = 10.dp),
+                shape = RoundedCornerShape(
+                    topStart = 20.dp,
+                    topEnd = 20.dp,
+                    bottomEnd = 10.dp,
+                    bottomStart = 10.dp
+                ),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFEAF1FF)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
                         Text(
-                            text = "Selamat datang di Piyo!",
+                            text = "Selamat datang, $userName!",
                             fontFamily = Sora,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
@@ -44,7 +63,11 @@ fun WelcomePopup(visible: Boolean, onDismiss: () -> Unit, modifier: Modifier = M
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "Close", tint = BlueMain)
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = BlueMain
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -55,15 +78,24 @@ fun WelcomePopup(visible: Boolean, onDismiss: () -> Unit, modifier: Modifier = M
                         color = Color(0xFF374151)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Spacer(modifier = Modifier.weight(1f))
                         OutlinedButton(
                             onClick = onDismiss,
                             border = BorderStroke(1.dp, BlueMain),
                             shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White
+                            )
                         ) {
-                            Text(text = "Selanjutnya", color = BlueMain, fontFamily = Sora)
+                            Text(
+                                text = "Selanjutnya",
+                                color = BlueMain,
+                                fontFamily = Sora
+                            )
                         }
                     }
                 }
