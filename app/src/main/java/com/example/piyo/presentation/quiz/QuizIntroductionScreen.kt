@@ -104,7 +104,12 @@ fun QuizIntroductionScreen(
 
         Button(
             onClick = {
-                navController.navigate("quiz_question/$childAge/$childId")
+                navController.navigate(
+                    com.example.piyo.presentation.navigation.QuizQuestionRoute(
+                        childAge = childAge,
+                        childId = childId
+                    )
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -143,4 +148,3 @@ private fun InstructionItem(number: Int, text: String) {
         )
     }
 }
-
