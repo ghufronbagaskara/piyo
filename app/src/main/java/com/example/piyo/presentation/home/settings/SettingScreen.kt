@@ -46,7 +46,6 @@ fun SettingScreen(
 
     Scaffold(
         containerColor = Color.White,
-        contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
