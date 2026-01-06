@@ -1,9 +1,11 @@
 package com.example.piyo.di
 
+import com.example.piyo.data.local.PreferencesManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val appModule = module {
@@ -13,6 +15,9 @@ val appModule = module {
     single { FirebaseFirestore.getInstance() }
     single { FirebaseDatabase.getInstance() }
     single { FirebaseStorage.getInstance() }
+
+    // PreferencesManager
+    single { PreferencesManager(androidContext()) }
 
     // Retrofit (jika nanti butuh REST API)
     // single { provideRetrofit() }
