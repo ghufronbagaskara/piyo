@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class QuizContentService(private val firestore: FirebaseFirestore) {
-    private val quizzesCollection = firestore.collection("quizzes")
+    private val quizContentsCollection = firestore.collection("quiz_contents")
 
     suspend fun getQuizByAgeSegment(ageSegment: String): ParentingQuizDto? {
-        val snapshot = quizzesCollection
+        val snapshot = quizContentsCollection
             .whereEqualTo("ageSegment", ageSegment)
             .limit(1)
             .get()
@@ -21,7 +21,7 @@ class QuizContentService(private val firestore: FirebaseFirestore) {
     }
 
     fun observeAllQuizzes(): Flow<List<ParentingQuizDto>> = callbackFlow {
-        val listener = quizzesCollection
+        val listener = quizContentsCollection
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
