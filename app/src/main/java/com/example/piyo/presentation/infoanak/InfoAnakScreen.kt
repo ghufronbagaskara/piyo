@@ -1,5 +1,6 @@
 package com.example.piyo.presentation.infoanak
 
+import android.Manifest
 import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -13,8 +14,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,14 +36,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.piyo.R
+import com.example.piyo.presentation.camera.CameraCaptureScreen
 import com.example.piyo.ui.theme.BlueMain
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.io.ByteArrayOutputStream
 
-@OptIn(ExperimentalMaterial3Api::class)
+enum class PhotoType {
+    PROFILE, BABY
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun InfoAnakScreen(
     navController: NavController,
@@ -50,6 +63,42 @@ fun InfoAnakScreen(
     val state = viewModel.state
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Camera permission state
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+
+    // Dialog and camera states
+    var showPhotoPickerDialog by remember { mutableStateOf(false) }
+    var showCameraForProfile by remember { mutableStateOf(false) }
+    var showCameraForBaby by remember { mutableStateOf(false) }
+    var photoTypeToCapture by remember { mutableStateOf<PhotoType?>(null) }
+    var pendingCameraAction by remember { mutableStateOf<PhotoType?>(null) }
+
+    // Handle camera permission result
+    LaunchedEffect(cameraPermissionState.status.isGranted) {
+        if (cameraPermissionState.status.isGranted && pendingCameraAction != null) {
+            when (pendingCameraAction) {
+                PhotoType.PROFILE -> showCameraForProfile = true
+                PhotoType.BABY -> showCameraForBaby = true
+                else -> {}
+            }
+            pendingCameraAction = null
+        }
+    }
+
+    // Function to request camera with permission check
+    fun requestCameraWithPermission(photoType: PhotoType) {
+        if (cameraPermissionState.status.isGranted) {
+            when (photoType) {
+                PhotoType.PROFILE -> showCameraForProfile = true
+                PhotoType.BABY -> showCameraForBaby = true
+            }
+        } else {
+            pendingCameraAction = photoType
+            cameraPermissionState.launchPermissionRequest()
+        }
+    }
 
     // Image picker launchers
     val profilePhotoLauncher = rememberLauncherForActivityResult(
@@ -75,6 +124,21 @@ fun InfoAnakScreen(
             val tempId = childId ?: "temp_${System.currentTimeMillis()}"
             val photoData = uriToByteArray(context, it)
             if (photoData != null) {
+                viewModel.uploadBabyPhoto(photoData, tempId)
+            }
+        }
+    }
+
+    // Handle camera captured photo
+    fun handleCapturedPhoto(uri: Uri, isProfile: Boolean) {
+        val tempId = childId ?: "temp_${System.currentTimeMillis()}"
+        val photoData = uriToByteArray(context, uri)
+        if (photoData != null) {
+            if (isProfile) {
+                viewModel.onProfilePhotoSelected(uri)
+                viewModel.uploadProfilePhoto(photoData, tempId)
+            } else {
+                viewModel.onBabyPhotoSelected(uri)
                 viewModel.uploadBabyPhoto(photoData, tempId)
             }
         }
@@ -111,14 +175,13 @@ fun InfoAnakScreen(
                 title = { Text("Informasi Anak", fontWeight = FontWeight.Bold, color = Color.Black) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.Black)
                     }
                 }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.White,
-        contentWindowInsets = WindowInsets.safeDrawing,
         bottomBar = {
             Box(
                 Modifier
@@ -173,7 +236,10 @@ fun InfoAnakScreen(
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .padding(4.dp)
-                                .clickable { profilePhotoLauncher.launch("image/*") }
+                                .clickable {
+                                    photoTypeToCapture = PhotoType.PROFILE
+                                    showPhotoPickerDialog = true
+                                }
                         ) {
                             if (state.profilePhotoUri != null || state.profilePhotoUrl.isNotBlank()) {
                                 AsyncImage(
@@ -282,7 +348,10 @@ fun InfoAnakScreen(
                             .height(64.dp)
                             .dashedBorder(2.dp, BlueMain, 32.dp, on = 14f, off = 10f)
                             .clip(RoundedCornerShape(32.dp))
-                            .clickable { babyPhotoLauncher.launch("image/*") },
+                            .clickable {
+                                photoTypeToCapture = PhotoType.BABY
+                                showPhotoPickerDialog = true
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         if (state.babyPhotoUri != null || state.babyPhotoUrl.isNotBlank()) {
@@ -343,6 +412,127 @@ fun InfoAnakScreen(
             ) {
                 CircularProgressIndicator(color = BlueMain)
             }
+        }
+
+        // Photo picker dialog
+        if (showPhotoPickerDialog) {
+            Dialog(onDismissRequest = { showPhotoPickerDialog = false }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Pilih Sumber Foto",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.Black
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Camera option
+                            TextButton(
+                                onClick = {
+                                    when (photoTypeToCapture) {
+                                        PhotoType.PROFILE -> requestCameraWithPermission(PhotoType.PROFILE)
+                                        PhotoType.BABY -> requestCameraWithPermission(PhotoType.BABY)
+                                        else -> {}
+                                    }
+                                    showPhotoPickerDialog = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.CameraAlt,
+                                        contentDescription = "Camera",
+                                        tint = BlueMain
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Kamera",
+                                        color = BlueMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+
+                            // Gallery option
+                            TextButton(
+                                onClick = {
+                                    when (photoTypeToCapture) {
+                                        PhotoType.PROFILE -> profilePhotoLauncher.launch("image/*")
+                                        PhotoType.BABY -> babyPhotoLauncher.launch("image/*")
+                                        else -> {}
+                                    }
+                                    showPhotoPickerDialog = false
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.PhotoLibrary,
+                                        contentDescription = "Gallery",
+                                        tint = BlueMain
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Galeri",
+                                        color = BlueMain,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Camera capture screen
+        if (showCameraForProfile) {
+            CameraCaptureScreen(
+                onPhotoCaptured = { uri ->
+                    handleCapturedPhoto(uri, isProfile = true)
+                    showCameraForProfile = false
+                },
+                onError = { errorMsg ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(errorMsg)
+                    }
+                },
+                onClose = {
+                    showCameraForProfile = false
+                }
+            )
+        }
+
+        // Baby photo camera capture
+        if (showCameraForBaby) {
+            CameraCaptureScreen(
+                onPhotoCaptured = { uri ->
+                    handleCapturedPhoto(uri, isProfile = false)
+                    showCameraForBaby = false
+                },
+                onError = { errorMsg ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(errorMsg)
+                    }
+                },
+                onClose = {
+                    showCameraForBaby = false
+                }
+            )
         }
     }
 }
@@ -434,7 +624,7 @@ private fun uriToByteArray(context: Context, uri: Uri): ByteArray? {
         inputStream?.copyTo(byteArrayOutputStream)
         inputStream?.close()
         byteArrayOutputStream.toByteArray()
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }
