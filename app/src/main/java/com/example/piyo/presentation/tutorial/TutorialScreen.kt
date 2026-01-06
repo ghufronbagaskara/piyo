@@ -39,14 +39,13 @@ fun TutorialScreen(navController: NavController) {
 
     Scaffold(
         containerColor = Color.White,
-        contentWindowInsets = WindowInsets.safeDrawing,
         bottomBar = {
-
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                    .padding(horizontal = 24.dp, vertical = 20.dp)
+                    .background(Color.White)
+                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 20.dp)
+                    .navigationBarsPadding()
             ) {
                 Button(
                     onClick = {
@@ -81,98 +80,117 @@ fun TutorialScreen(navController: NavController) {
                 .background(Color.White)
         ) {
 
+            // Background decorations
             Image(
                 painter = painterResource(id = R.drawable.ellipse_169),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(420.dp)
-                    .offset(x = (-180).dp, y = (-180).dp)
+                    .size(400.dp)
+                    .offset(x = (-200).dp, y = (-200).dp)
                     .align(Alignment.TopStart),
-                alpha = 0.35f
+                alpha = 0.3f
             )
             Image(
                 painter = painterResource(id = R.drawable.ellipse_170),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(420.dp)
-                    .offset(x = (-40).dp, y = (540).dp)
+                    .size(400.dp)
+                    .offset(x = (-50).dp, y = (550).dp)
                     .align(Alignment.BottomCenter),
-                alpha = 0.5f
+                alpha = 0.4f
             )
-
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.Top
+                    .statusBarsPadding()
+                    .padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-
-                // Top row: Back | Progress indicator (center) | Lewati
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (pagerState.currentPage > 0) {
-                        IconButton(onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color.Black
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.size(48.dp))
-                    }
-
-                    // Center progress indicator
-                    Box(modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp, end = 8.dp),
-                        contentAlignment = Alignment.Center
+                // Top section with navigation and progress
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        ProgressIndicatorWithThumb(
-                            currentPage = pagerState.currentPage,
-                            totalPages = totalPages,
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                        // Back button or spacer
+                        if (pagerState.currentPage > 0) {
+                            IconButton(onClick = {
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.Black
+                                )
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.width(48.dp))
+                        }
+
+                        // Skip button
+                        Text(
+                            text = "Lewati",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable {
+                                navController.navigate(LoginRoute)
+                            }
                         )
                     }
 
-                    Text(
-                        text = "Lewati",
-                        color = Color.Gray,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                    // Progress indicator
+                    Row(
                         modifier = Modifier
-                            .clickable { navController.navigate(LoginRoute) }
-                            .padding(start = 8.dp)
-                    )
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        repeat(totalPages) { index ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(4.dp)
+                                    .background(
+                                        color = if (index <= pagerState.currentPage) BlueMain else Color(0xFFD9E5EE),
+                                        shape = RoundedCornerShape(2.dp)
+                                    )
+                            )
+                        }
+                    }
+
+                    // Page counter
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "${pagerState.currentPage + 1}/$totalPages",
+                            color = BlueMain,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
-                // small page count on the right under the top bar (matching sample image style)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    Text(
-                        text = "${pagerState.currentPage + 1}/$totalPages",
-                        color = BlueMain,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(end = 4.dp)
-                    )
-                }
-
+                // Content pager
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(top = 8.dp),
+                        .padding(bottom = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    HorizontalPager(state = pagerState) { page ->
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
                         TutorialPage(page)
                     }
                 }
@@ -224,50 +242,5 @@ fun TutorialPage(page: Int) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 12.dp)
         )
-    }
-}
-
-@Composable
-fun ProgressIndicatorWithThumb(currentPage: Int, totalPages: Int, modifier: Modifier = Modifier) {
-    BoxWithConstraints(modifier = modifier.height(40.dp)) {
-        val fullWidthPx = constraints.maxWidth
-        val fullWidthDp = with(LocalDensity.current) { fullWidthPx.toDp() }
-        val thumbSize = 18.dp
-        val segmentSpacing = 8.dp
-
-        // segments row
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(segmentSpacing)
-        ) {
-            repeat(totalPages) { index ->
-                Box(modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(
-                        color = if (index <= currentPage) BlueMain else Color(0xFFD9E5EE),
-                        shape = RoundedCornerShape(50)
-                    )
-                )
-            }
-        }
-
-        // thumb overlay
-        if (totalPages > 1) {
-            // compute x offset in dp where thumb center should be
-            val availableWidthDp = fullWidthDp - segmentSpacing * (totalPages - 1)
-            val segmentWidthDp = availableWidthDp / totalPages
-            val centerOffsetDp = segmentWidthDp * (currentPage + 0.5f) + segmentSpacing * currentPage
-            val thumbOffsetDp = centerOffsetDp - (thumbSize / 2f)
-
-            Box(
-                modifier = Modifier
-                    .offset(x = thumbOffsetDp)
-                    .size(thumbSize)
-                    .background(color = BlueMain, shape = CircleShape)
-                    .align(Alignment.CenterStart)
-            )
-        }
     }
 }
